@@ -1,0 +1,25 @@
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code local settings
+.claude/
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Original source files (keep only web app)
+files/

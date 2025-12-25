@@ -652,4 +652,20 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCalculations();
         });
     });
+
+    // About overlay
+    document.getElementById('about-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('about-overlay').classList.add('visible');
+    });
+
+    document.getElementById('close-about').addEventListener('click', () => {
+        document.getElementById('about-overlay').classList.remove('visible');
+    });
+
+    document.getElementById('about-overlay').addEventListener('click', (e) => {
+        if (e.target.id === 'about-overlay') {
+            document.getElementById('about-overlay').classList.remove('visible');
+        }
+    });
 });

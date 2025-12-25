@@ -172,9 +172,112 @@
 
         <!-- Footer -->
         <footer class="footer">
-            <p>Based on: <a href="https://doi.org/10.1182/bloodadvances.2024012931" target="_blank">Djulbegovic B, Hozo I, Guyatt G. Blood Advances 2024</a></p>
+            <p>
+                <a href="#" id="about-link">About This Tool</a> |
+                Based on: <a href="https://doi.org/10.1182/bloodadvances.2024012931" target="_blank">Djulbegovic B, Hozo I, Guyatt G. Blood Advances 2024</a>
+            </p>
             <p class="disclaimer">This tool is for educational purposes. Clinical decisions should be made in consultation with healthcare providers.</p>
         </footer>
+    </div>
+
+    <!-- About Overlay -->
+    <div class="about-overlay" id="about-overlay">
+        <div class="about-panel">
+            <button class="close-btn" id="close-about">&times;</button>
+
+            <h2>About This Tool</h2>
+
+            <section class="about-section">
+                <h3>Purpose</h3>
+                <p>This calculator provides evidence-based decision support for thrombophilia testing and treatment decisions based on the American Society of Hematology (ASH) 2023 Guidelines. It implements a decision-theoretical framework that makes explicit the trade-offs between benefits and harms of testing and treatment.</p>
+            </section>
+
+            <section class="about-section">
+                <h3>The Threshold Approach</h3>
+                <p>Clinical decisions can be framed using <strong>decision thresholds</strong>—probability cutoffs that determine when the expected benefits of an action outweigh its expected harms.</p>
+
+                <div class="threshold-diagram">
+                    <div class="threshold-zone zone-norx">
+                        <span class="zone-label">Don't Treat</span>
+                        <span class="zone-desc">VTE risk too low to justify treatment harms</span>
+                    </div>
+                    <div class="threshold-marker">Testing Threshold</div>
+                    <div class="threshold-zone zone-test">
+                        <span class="zone-label">Test First</span>
+                        <span class="zone-desc">Testing can identify who benefits from treatment</span>
+                    </div>
+                    <div class="threshold-marker">Treatment Threshold</div>
+                    <div class="threshold-zone zone-rx">
+                        <span class="zone-label">Treat All</span>
+                        <span class="zone-desc">VTE risk high enough to treat without testing</span>
+                    </div>
+                </div>
+
+                <p>The thresholds are calculated using Expected Utility Theory (EUT), weighing:</p>
+                <ul>
+                    <li><strong>Probability of VTE</strong> without treatment</li>
+                    <li><strong>Relative risk reduction</strong> from anticoagulation</li>
+                    <li><strong>Bleeding risk</strong> from treatment</li>
+                    <li><strong>Test characteristics</strong> (prevalence, relative risk in positives)</li>
+                    <li><strong>Patient preferences</strong> (relative value of avoiding VTE vs. bleeding)</li>
+                </ul>
+            </section>
+
+            <section class="about-section">
+                <h3>Two Types of Decisions</h3>
+
+                <div class="decision-types">
+                    <div class="decision-type">
+                        <h4>Anticoagulation Decisions (R1-R14, R21-R23)</h4>
+                        <p>Trade-off: <strong>VTE prevention vs. Bleeding risk</strong></p>
+                        <p>Treatment (anticoagulation) <em>reduces</em> VTE but <em>increases</em> bleeding. Higher VTE risk favors treatment.</p>
+                    </div>
+
+                    <div class="decision-type hormonal">
+                        <h4>COC/HRT Decisions (R15-R20)</h4>
+                        <p>Trade-off: <strong>VTE risk vs. Contraceptive/HRT benefits</strong></p>
+                        <p>Treatment (hormones) <em>increases</em> VTE risk but provides benefits. This creates <em>reversed</em> decision logic—lower VTE risk favors using COC/HRT.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-section">
+                <h3>Mathematical Foundation</h3>
+                <p>The treatment threshold (P<sub>t</sub>) is derived from the point where expected utility of treatment equals expected utility of no treatment:</p>
+                <div class="formula">
+                    P<sub>t</sub> = RV × (RR<sub>bleed</sub> - 1) × H / (1 - RR<sub>rx</sub>)
+                </div>
+                <p>Where RV = relative value of outcomes, H = baseline bleeding risk, RR = relative risks.</p>
+                <p>The testing threshold (P<sub>tt</sub>) accounts for test characteristics to identify the range where testing provides value.</p>
+            </section>
+
+            <section class="about-section">
+                <h3>References</h3>
+                <ul class="references">
+                    <li>Djulbegovic B, Hozo I, Guyatt G. Decision-theoretical foundations of the ASH thrombophilia guidelines. <em>Blood Advances</em>. 2024. <a href="https://doi.org/10.1182/bloodadvances.2024012931" target="_blank">doi:10.1182/bloodadvances.2024012931</a></li>
+                    <li>Pauker SG, Kassirer JP. The threshold approach to clinical decision making. <em>N Engl J Med</em>. 1980;302:1109-1117.</li>
+                    <li>ASH Guidelines on Thrombophilia Testing. <em>Blood Advances</em>. 2023.</li>
+                </ul>
+            </section>
+
+            <section class="about-section">
+                <h3>Color Legend</h3>
+                <div class="color-legend">
+                    <div class="legend-item">
+                        <span class="legend-color green"></span>
+                        <span><strong>Green:</strong> Treatment recommended</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color yellow"></span>
+                        <span><strong>Yellow:</strong> Testing recommended first</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color red"></span>
+                        <span><strong>Red:</strong> No treatment recommended</span>
+                    </div>
+                </div>
+            </section>
+        </div>
     </div>
 
     <!-- Search Results Overlay -->
