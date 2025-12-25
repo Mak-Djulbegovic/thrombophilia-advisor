@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thrombophilia Testing Advisor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Hero Section - Search First -->
+        <header class="hero">
+            <h1>Should I Test for Thrombophilia?</h1>
+            <p class="hero-subtitle">Evidence-based decision support for thrombophilia testing and treatment</p>
+
+            <div class="search-hero">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" id="main-search"
+                           placeholder="Describe your clinical scenario..."
+                           autocomplete="off">
+                    <button class="search-btn" id="search-btn">Find Recommendation</button>
+                </div>
+                <div class="search-hints">
+                    <span>Try:</span>
+                    <button class="hint-btn" data-query="Patient with unprovoked DVT, should I test?">unprovoked DVT</button>
+                    <button class="hint-btn" data-query="Woman wants birth control pills, family history of clots">birth control + family history</button>
+                    <button class="hint-btn" data-query="VTE after surgery, need long-term anticoagulation?">post-surgery VTE</button>
+                    <button class="hint-btn" data-query="Pregnant woman with protein C deficiency">pregnancy + thrombophilia</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content - Hidden until search -->
+        <main class="main-content" id="main-content">
+            <!-- Recommendation Card -->
+            <section class="recommendation-card" id="recommendation-card">
+                <div class="card-header">
+                    <span class="card-badge" id="card-badge">R1</span>
+                    <span class="card-category" id="card-category">Anticoagulation Decision</span>
+                </div>
+
+                <h2 class="scenario-title" id="scenario-title">Clinical Scenario</h2>
+                <p class="scenario-desc" id="scenario-desc">Description will appear here...</p>
+
+                <!-- The Answer -->
+                <div class="answer-section">
+                    <div class="answer-box" id="answer-box">
+                        <div class="answer-label">Recommendation</div>
+                        <div class="answer-value" id="answer-value">Test for Thrombophilia</div>
+                        <div class="answer-detail" id="answer-detail">
+                            Based on decision analysis, testing is recommended for this scenario.
+                        </div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="comparison-item model">
+                            <span class="comp-label">Decision Model</span>
+                            <span class="comp-value" id="model-decision">Test</span>
+                        </div>
+                        <div class="comparison-divider" id="agreement-indicator">
+                            <span class="agree-icon">=</span>
+                        </div>
+                        <div class="comparison-item ash">
+                            <span class="comp-label">ASH Guideline</span>
+                            <span class="comp-value" id="ash-decision">Test</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expandable Details -->
+                <details class="details-section">
+                    <summary>View detailed analysis</summary>
+
+                    <div class="details-content">
+                        <!-- Thresholds -->
+                        <div class="threshold-summary">
+                            <h4>Decision Thresholds</h4>
+                            <div class="threshold-row">
+                                <div class="threshold-item">
+                                    <span class="th-label">Current VTE Risk</span>
+                                    <span class="th-value" id="current-risk">10%</span>
+                                </div>
+                                <div class="threshold-item">
+                                    <span class="th-label">Test if above</span>
+                                    <span class="th-value" id="test-threshold">0.52%</span>
+                                </div>
+                                <div class="threshold-item">
+                                    <span class="th-label">Treat all if above</span>
+                                    <span class="th-value" id="treat-threshold">0.86%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Outcomes Table -->
+                        <div class="outcomes-summary">
+                            <h4>Expected Outcomes per 1,000 Patients</h4>
+                            <table class="outcomes-table">
+                                <thead>
+                                    <tr>
+                                        <th>Strategy</th>
+                                        <th>VTE Events</th>
+                                        <th id="harm-header">Major Bleeds</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr id="row-norx">
+                                        <td id="label-norx">Don't Treat</td>
+                                        <td id="vte-norx">100</td>
+                                        <td id="harm-norx">5</td>
+                                    </tr>
+                                    <tr id="row-test" class="highlight-row">
+                                        <td>Test First</td>
+                                        <td id="vte-test">57</td>
+                                        <td id="harm-test">7</td>
+                                    </tr>
+                                    <tr id="row-rx">
+                                        <td id="label-rx">Treat All</td>
+                                        <td id="vte-rx">15</td>
+                                        <td id="harm-rx">11</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Chart -->
+                        <div class="chart-section">
+                            <h4>Expected Utility Graph</h4>
+                            <canvas id="eut-chart"></canvas>
+                        </div>
+
+                        <!-- Adjustable Parameters -->
+                        <div class="parameters-section">
+                            <h4>Adjust Parameters</h4>
+                            <div class="param-grid">
+                                <div class="param-item">
+                                    <label for="param-pvte">VTE Risk (%)</label>
+                                    <input type="number" id="param-pvte" step="0.01" value="10">
+                                    <button class="reset-btn" id="reset-pvte">Reset</button>
+                                </div>
+                                <div class="param-item">
+                                    <label for="param-rv">Patient Preference (RV)</label>
+                                    <input type="number" id="param-rv" step="0.1" min="0.1" max="10" value="1">
+                                    <small>1 = equal weight to VTE and harms</small>
+                                </div>
+                                <div class="param-item" id="bleeding-risk-section">
+                                    <label>Bleeding Risk</label>
+                                    <div class="toggle-group">
+                                        <button class="toggle-btn active" data-value="low">Low</button>
+                                        <button class="toggle-btn" data-value="high">High</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- Search Again -->
+                <button class="search-again-btn" id="search-again">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                    Search for another scenario
+                </button>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Based on: <a href="https://doi.org/10.1182/bloodadvances.2024012931" target="_blank">Djulbegovic B, Hozo I, Guyatt G. Blood Advances 2024</a></p>
+            <p class="disclaimer">This tool is for educational purposes. Clinical decisions should be made in consultation with healthcare providers.</p>
+        </footer>
+    </div>
+
+    <!-- Search Results Overlay -->
+    <div class="search-overlay" id="search-overlay">
+        <div class="search-results-panel">
+            <div class="results-header">
+                <h3>Select the best match:</h3>
+                <button class="close-btn" id="close-overlay">&times;</button>
+            </div>
+            <div class="results-list" id="results-list">
+                <!-- Results populate here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="calculator.js"></script>
+</body>
+</html>

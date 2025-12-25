@@ -1,0 +1,10 @@
+Maki,
+Can you ask David to help with this ?
+Over the years , we have developed a bunch of the (relatively simple)  EXCEL-based calculators (usually multi-sheets) that, unfortunately, proved not as user-friendly as I initially expected. So, I thought let me use ChatGPT (now a  touted version 5) to convert the EXCEL-based applications into a web-based, interactive apps. But, regardless of how I write my prompt, I get a bunch of non-sensical, inaccurate applications that would be dangerous to use in medical settings. And, yet, when I see the promotional videos, it's is presented that  ChatGPT model 5, can deliver the codes and apps at the phenomenal speed for much more complex tasks than converting simple EXCEL files into the web-based application.
+ 
+Can you ask David how to go about this ?  Here are two main prompts that I have sort of tried but it did not work. [I tried others as well]  One prompt is longer, more specific and other is shorter (some people told me that it may be better not to be too specific)?
+ 
+I also tried to run this in Perplexity. Here is the link- but it is wrong 
+ 
+https://ppl-ai-code-interpreter-files.s3.amazonaws.com/web/direct-files/5ea97df2ec6431846adc27ac1d7bad11/caabfb25-252c-4ee7-b3d9-a124db54362a/index.html?utm_source=perplexity
+
