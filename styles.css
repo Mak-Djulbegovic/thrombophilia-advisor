@@ -532,6 +532,18 @@ body {
     background: var(--primary-light);
 }
 
+/* Outcomes Bar Chart */
+.outcomes-chart-container {
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius);
+}
+
+.outcomes-chart-container canvas {
+    max-height: 250px;
+}
+
 /* Chart */
 .chart-section {
     margin-top: 20px;

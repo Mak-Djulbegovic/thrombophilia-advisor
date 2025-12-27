@@ -20,6 +20,7 @@
 
 let currentRecommendation = null;
 let eutChart = null;
+let outcomesChart = null;
 
 // ============================================================================
 // NLP SEARCH ENGINE
@@ -285,10 +286,14 @@ function calculateOutcomes(params, N = 1000) {
     const pVTE_pos = pVTE_neg * RRt;
 
     if (isHormonal) {
+        // For hormonal: "harm" = unwanted pregnancies (inverse logic)
+        // NoRx (Avoid COC): baseline VTE, but ALL have unwanted pregnancy risk
+        // Rx (Use COC): increased VTE, but NO unwanted pregnancies (protected)
+        // Test: positives avoid (have pregnancy risk), negatives use (protected)
         return {
-            Rx: { vte: pVTE * RRrx * N, harm: N },
-            Test: { vte: pVTE_pos * N_pos + pVTE_neg * RRrx * N_neg, harm: N_neg },
-            NoRx: { vte: pVTE * N, harm: 0 }
+            NoRx: { vte: pVTE * N, harm: H * N },
+            Test: { vte: pVTE_pos * N_pos + pVTE_neg * RRrx * N_neg, harm: H * N_pos },
+            Rx: { vte: pVTE * RRrx * N, harm: 0 }
         };
     } else {
         return {
@@ -371,7 +376,7 @@ function displayRecommendation(rec) {
 
     // Update harm header for hormonal scenarios
     const harmHeader = document.getElementById('harm-header');
-    harmHeader.textContent = isHormonal ? 'Benefits Obtained*' : 'Major Bleeds';
+    harmHeader.textContent = isHormonal ? '# of Pregnancies' : 'Major Bleeds';
 
     // Update row labels
     document.getElementById('label-norx').textContent = isHormonal ? 'Avoid COC/HRT' : "Don't Treat";
@@ -440,8 +445,70 @@ function updateCalculations() {
     else if (modelDecision === 'Test') document.getElementById('row-test').classList.add('highlight-row');
     else document.getElementById('row-rx').classList.add('highlight-row');
 
-    // Update chart
+    // Update charts
     updateEUTChart(params, thresholds);
+    updateOutcomesChart(outcomes, params.isHormonal, modelDecision);
+}
+
+function updateOutcomesChart(outcomes, isHormonal, modelDecision) {
+    const ctx = document.getElementById('outcomes-chart').getContext('2d');
+
+    if (outcomesChart) outcomesChart.destroy();
+
+    const labels = isHormonal
+        ? ['Avoid COC/HRT', 'Test First', 'Use COC/HRT']
+        : ['No Treatment', 'Test & Treat', 'Treat All'];
+
+    const harmLabel = isHormonal ? '# of Pregnancies' : 'Major Bleeds';
+
+    // Determine which bar to highlight based on decision
+    const highlightIndex = modelDecision === 'NoRx' ? 0 : (modelDecision === 'Test' ? 1 : 2);
+    const vteColors = labels.map((_, i) => i === highlightIndex ? 'rgba(37, 99, 235, 1)' : 'rgba(37, 99, 235, 0.5)');
+    const harmColors = labels.map((_, i) => i === highlightIndex ? 'rgba(220, 38, 38, 1)' : 'rgba(220, 38, 38, 0.5)');
+
+    outcomesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'VTE Recurrence',
+                    data: [outcomes.NoRx.vte, outcomes.Test.vte, outcomes.Rx.vte],
+                    backgroundColor: vteColors,
+                    borderColor: 'rgba(37, 99, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: harmLabel,
+                    data: [outcomes.NoRx.harm, outcomes.Test.harm, outcomes.Rx.harm],
+                    backgroundColor: harmColors,
+                    borderColor: 'rgba(220, 38, 38, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Events per 1,000 Patients'
+                    }
+                }
+            }
+        }
+    });
 }
 
 function updateEUTChart(params, thresholds) {
@@ -461,20 +528,26 @@ function updateEUTChart(params, thresholds) {
 
     pVTERange.forEach(p => {
         if (isHormonal) {
-            euNoRx.push(-(p * RV) + 0);
-            euRx.push(-(p * RRrx * RV) + 1);
+            // Weighted average (VTE + pregnancy): positive values, INVERSE logic
+            // Lower = better outcome
+            // NoRx = avoid COC: baseline VTE + cost of foregone benefit (H)
+            euNoRx.push(p * RV + H);
+            // Rx = use COC: increased VTE risk, but get the benefit (no H penalty)
+            euRx.push(p * RRrx * RV);
             const p_neg = p / (RRt * Tp + (1 - Tp));
             const p_pos = p_neg * RRt;
+            // Test: positives avoid COC (baseline VTE + H), negatives use COC (increased VTE, no H)
             const testVTE = p_pos * Tp + p_neg * RRrx * (1 - Tp);
-            euTest.push(-(testVTE * RV) + (1 - Tp));
+            euTest.push(testVTE * RV + H * Tp);
         } else {
-            euNoRx.push(-(p + RV * H));
-            euRx.push(-(p * RRrx + RV * H * RRbleed));
+            // Weighted average (VTE + major bleeding): positive values
+            euNoRx.push(p + RV * H);
+            euRx.push(p * RRrx + RV * H * RRbleed);
             const p_neg = p / (RRt * Tp + (1 - Tp));
             const p_pos = p_neg * RRt;
             const testVTE = p_pos * RRrx * Tp + p_neg * (1 - Tp);
             const testBleed = H * (1 - Tp) + H * RRbleed * Tp;
-            euTest.push(-(testVTE + RV * testBleed));
+            euTest.push(testVTE + RV * testBleed);
         }
     });
 
@@ -498,8 +571,8 @@ function updateEUTChart(params, thresholds) {
             interaction: { intersect: false, mode: 'index' },
             plugins: { legend: { position: 'top' } },
             scales: {
-                x: { title: { display: true, text: 'Probability of VTE (%)' }, ticks: { callback: function(v, i) { return i % 20 === 0 ? this.getLabelForValue(v) : ''; } } },
-                y: { title: { display: true, text: 'Expected Utility' } }
+                x: { title: { display: true, text: 'Probability of VTE Recurrence (%)' }, ticks: { callback: function(v, i) { return i % 20 === 0 ? this.getLabelForValue(v) : ''; } } },
+                y: { beginAtZero: true, title: { display: true, text: isHormonal ? 'Weighted Average (VTE+pregnancy)' : 'Weighted Average (VTE+major bleeding)' } }
             }
         },
         plugins: [{
