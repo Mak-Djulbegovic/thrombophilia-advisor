@@ -73,6 +73,98 @@ body {
     margin-bottom: 40px;
 }
 
+/* Quick Start Guide */
+.quick-start {
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--radius);
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.quick-start h3 {
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    opacity: 0.9;
+}
+
+.quick-steps {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.quick-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+}
+
+.step-num {
+    background: rgba(255,255,255,0.3);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+/* Dropdown Section */
+.dropdown-section {
+    margin-bottom: 16px;
+}
+
+.dropdown-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.dropdown-section select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: var(--radius);
+    background: white;
+    color: var(--gray-800);
+    cursor: pointer;
+}
+
+.dropdown-section select:focus {
+    outline: none;
+    border-color: white;
+}
+
+/* OR Divider */
+.or-divider {
+    display: flex;
+    align-items: center;
+    margin: 16px 0;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.3);
+}
+
+.or-divider span {
+    padding: 0 16px;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
 .search-hero {
     max-width: 700px;
     margin: 0 auto;

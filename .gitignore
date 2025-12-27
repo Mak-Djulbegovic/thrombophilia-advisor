@@ -23,3 +23,10 @@ Thumbs.db
 
 # Original source files (keep only web app)
 files/
+
+# Verification generated files (regenerate locally)
+verification/verification_report.html
+verification/accuracy_chart.png
+
+# Local data extracts
+recommendation_data.json

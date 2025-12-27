@@ -14,14 +14,116 @@
             <h1>Should I Test for Thrombophilia?</h1>
             <p class="hero-subtitle">Evidence-based decision support for thrombophilia testing and treatment</p>
 
+            <!-- Quick Start Guide -->
+            <div class="quick-start">
+                <h3>How to Use This Tool</h3>
+                <div class="quick-steps">
+                    <div class="quick-step">
+                        <span class="step-num">1</span>
+                        <span>Search by keywords or select from dropdown</span>
+                    </div>
+                    <div class="quick-step">
+                        <span class="step-num">2</span>
+                        <span>Review the recommended action</span>
+                    </div>
+                    <div class="quick-step">
+                        <span class="step-num">3</span>
+                        <span>Adjust parameters to see how they affect the decision</span>
+                    </div>
+                </div>
+            </div>
+
             <div class="search-hero">
+                <!-- Dropdown Selector -->
+                <div class="dropdown-section">
+                    <label for="rec-dropdown">Browse by Category:</label>
+                    <select id="rec-dropdown">
+                        <option value="">-- Select a Recommendation --</option>
+                        <optgroup label="Symptomatic VTE (R1-R6)">
+                            <option value="R1">R1: Unprovoked VTE</option>
+                            <option value="R2">R2: VTE provoked by surgery</option>
+                            <option value="R3">R3: VTE provoked by nonsurgical transient risk</option>
+                            <option value="R4">R4: VTE provoked by pregnancy/postpartum</option>
+                            <option value="R5">R5: VTE associated with COC use</option>
+                            <option value="R6">R6: Unspecified VTE type</option>
+                        </optgroup>
+                        <optgroup label="VTE in Unusual Sites (R7-R10)">
+                            <option value="R7">R7: Cerebral venous thrombosis - discontinue setting</option>
+                            <option value="R8">R8: Cerebral venous thrombosis - continue setting</option>
+                            <option value="R9">R9: Splanchnic venous thrombosis - discontinue setting</option>
+                            <option value="R10">R10: Splanchnic venous thrombosis - continue setting</option>
+                        </optgroup>
+                        <optgroup label="Asymptomatic with Family History (R11-R14)">
+                            <option value="R11a">R11a: Family VTE + FVL</option>
+                            <option value="R11b">R11b: Family VTE + PGM</option>
+                            <option value="R11c">R11c: Family VTE + Protein C def</option>
+                            <option value="R11d">R11d: Family VTE + Protein S def</option>
+                            <option value="R11e">R11e: Family VTE + Antithrombin def</option>
+                            <option value="R12a">R12a: Panel testing - FVL known</option>
+                            <option value="R12b">R12b: Panel testing - PGM known</option>
+                            <option value="R12c">R12c: Panel testing - Protein C known</option>
+                            <option value="R12d">R12d: Panel testing - Protein S known</option>
+                            <option value="R12e">R12e: Panel testing - Antithrombin known</option>
+                            <option value="R13">R13: Family VTE, unknown thrombophilia</option>
+                            <option value="R14a">R14a: Family FVL, no VTE</option>
+                            <option value="R14b">R14b: Family PGM, no VTE</option>
+                            <option value="R14c">R14c: Family Protein C, no VTE (1st degree)</option>
+                            <option value="R14d">R14d: Family Protein S, no VTE (1st degree)</option>
+                            <option value="R14e">R14e: Family Antithrombin, no VTE (1st degree)</option>
+                            <option value="R14f">R14f: Family Protein C, no VTE (2nd degree)</option>
+                            <option value="R14g">R14g: Family Protein S, no VTE (2nd degree)</option>
+                            <option value="R14h">R14h: Family Antithrombin, no VTE (2nd degree)</option>
+                        </optgroup>
+                        <optgroup label="Women Considering COC/HRT (R15-R20) - INVERSE MODEL">
+                            <option value="R15">R15: General population - COC</option>
+                            <option value="R16a">R16a: General population - HRT estrogen</option>
+                            <option value="R16b">R16b: General population - HRT combined</option>
+                            <option value="R17">R17: Family VTE - COC</option>
+                            <option value="R18a">R18a: Family VTE - HRT estrogen</option>
+                            <option value="R18b">R18b: Family VTE - HRT combined</option>
+                            <option value="R19a">R19a: Known FVL - COC</option>
+                            <option value="R19b">R19b: Known PGM - COC</option>
+                            <option value="R19c">R19c: Known Protein C - COC</option>
+                            <option value="R19d">R19d: Known Protein S - COC</option>
+                            <option value="R19e">R19e: Known Antithrombin - COC</option>
+                            <option value="R20a">R20a: Known FVL - HRT estrogen</option>
+                            <option value="R20b">R20b: Known FVL - HRT combined</option>
+                            <option value="R20c">R20c: Known PGM - HRT estrogen</option>
+                            <option value="R20d">R20d: Known PGM - HRT combined</option>
+                            <option value="R20e">R20e: Known Protein C - HRT estrogen</option>
+                            <option value="R20f">R20f: Known Protein C - HRT combined</option>
+                            <option value="R20g">R20g: Known Protein S - HRT estrogen</option>
+                            <option value="R20h">R20h: Known Protein S - HRT combined</option>
+                            <option value="R20i">R20i: Known Antithrombin - HRT estrogen</option>
+                            <option value="R20j">R20j: Known Antithrombin - HRT combined</option>
+                        </optgroup>
+                        <optgroup label="Women Planning Pregnancy (R21-R23)">
+                            <option value="R21a">R21a: Homozygous FVL - antepartum</option>
+                            <option value="R21b">R21b: FVL+PGM compound - antepartum</option>
+                            <option value="R21c">R21c: Antithrombin def - antepartum</option>
+                            <option value="R21d">R21d: Protein C def - antepartum</option>
+                            <option value="R21e">R21e: Protein S def - antepartum</option>
+                            <option value="R22a">R22a: Homozygous FVL - postpartum</option>
+                            <option value="R22b">R22b: FVL+PGM compound - postpartum</option>
+                            <option value="R22c">R22c: Antithrombin def - postpartum</option>
+                            <option value="R22d">R22d: Protein C def - postpartum</option>
+                            <option value="R22e">R22e: Protein S def - postpartum</option>
+                            <option value="R23a">R23a: Unknown thrombophilia - antepartum</option>
+                            <option value="R23b">R23b: Unknown thrombophilia - postpartum</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="or-divider"><span>OR</span></div>
+
+                <!-- Search Box -->
                 <div class="search-box">
                     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="M21 21l-4.35-4.35"></path>
                     </svg>
                     <input type="text" id="main-search"
-                           placeholder="Describe your clinical scenario..."
+                           placeholder="Or describe your clinical scenario in natural language..."
                            autocomplete="off">
                     <button class="search-btn" id="search-btn">Find Recommendation</button>
                 </div>

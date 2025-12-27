@@ -626,6 +626,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Dropdown selector
+    document.getElementById('rec-dropdown').addEventListener('change', (e) => {
+        const recId = e.target.value;
+        if (recId) {
+            const rec = RECOMMENDATIONS.find(r => r.id === recId);
+            if (rec) {
+                displayRecommendation(rec);
+            }
+        }
+    });
+
     // Close overlay
     document.getElementById('close-overlay').addEventListener('click', hideSearchOverlay);
     document.getElementById('search-overlay').addEventListener('click', (e) => {
