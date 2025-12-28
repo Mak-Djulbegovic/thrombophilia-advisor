@@ -434,6 +434,62 @@ body {
     font-size: 1.5rem;
 }
 
+/* Verification Table Styles */
+.verify-panel {
+    max-width: 1000px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.verify-summary {
+    background: var(--gray-100);
+    padding: 16px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.verify-summary strong {
+    color: var(--primary);
+}
+
+.verify-table-container {
+    overflow-x: auto;
+}
+
+.verify-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.verify-table th,
+.verify-table td {
+    border: 1px solid var(--gray-200);
+    padding: 8px 10px;
+    text-align: center;
+}
+
+.verify-table th {
+    background: var(--gray-100);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.verify-table tr.match {
+    background: var(--success-light);
+}
+
+.verify-table tr.mismatch {
+    background: var(--danger-light);
+}
+
+.verify-table td:first-child {
+    font-weight: 600;
+    text-align: left;
+}
+
 /* ASH Full Recommendation */
 .ash-recommendation-full {
     margin-top: 20px;

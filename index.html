@@ -286,6 +286,7 @@
         <footer class="footer">
             <p>
                 <a href="#" id="about-link">About This Tool</a> |
+                <a href="#" id="verify-link">Model Verification</a> |
                 Based on: <a href="https://doi.org/10.1182/bloodadvances.2024012931" target="_blank">Djulbegovic B, Hozo I, Guyatt G. Blood Advances 2024</a>
             </p>
             <p class="disclaimer">This tool is for educational purposes. Clinical decisions should be made in consultation with healthcare providers.</p>
@@ -422,6 +423,32 @@
             </div>
             <div class="results-list" id="results-list">
                 <!-- Results populate here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Overlay -->
+    <div class="about-overlay" id="verify-overlay">
+        <div class="about-panel verify-panel">
+            <button class="close-btn" id="close-verify">&times;</button>
+            <h2>Model vs Excel Agreement Verification</h2>
+            <div class="verify-summary" id="verify-summary"></div>
+            <div class="verify-table-container">
+                <table class="verify-table" id="verify-table">
+                    <thead>
+                        <tr>
+                            <th>Case</th>
+                            <th>pVTE (%)</th>
+                            <th>Ptt (%)</th>
+                            <th>Pt (%)</th>
+                            <th>Excel EUT</th>
+                            <th>Model EUT</th>
+                            <th>ASH</th>
+                            <th>Match?</th>
+                        </tr>
+                    </thead>
+                    <tbody id="verify-body"></tbody>
+                </table>
             </div>
         </div>
     </div>

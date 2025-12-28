@@ -834,4 +834,116 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('about-overlay').classList.remove('visible');
         }
     });
+
+    // Verification overlay
+    document.getElementById('verify-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        populateVerificationTable();
+        document.getElementById('verify-overlay').classList.add('visible');
+    });
+
+    document.getElementById('close-verify').addEventListener('click', () => {
+        document.getElementById('verify-overlay').classList.remove('visible');
+    });
+
+    document.getElementById('verify-overlay').addEventListener('click', (e) => {
+        if (e.target.id === 'verify-overlay') {
+            document.getElementById('verify-overlay').classList.remove('visible');
+        }
+    });
 });
+
+// ============================================================================
+// VERIFICATION TABLE
+// ============================================================================
+
+// Expected EUT decisions from Excel Agreement tab
+const EXCEL_AGREEMENT = {
+    'R1': 'Rx', 'R2': 'NoRx', 'R3': 'Rx', 'R4': 'Rx', 'R5': 'Rx', 'R6': 'Rx',
+    'R7': 'Rx', 'R8': 'Rx', 'R9': 'Rx', 'R10': 'Rx',
+    'R11a': 'Test', 'R11b': 'Test', 'R11c': 'Test', 'R11d': 'Rx', 'R11e': 'Rx',
+    'R12a': 'Test', 'R12b': 'Test', 'R12c': 'Test', 'R12d': 'Rx', 'R12e': 'Rx',
+    'R13': 'Test',
+    'R14a': 'Test', 'R14b': 'Test', 'R14c': 'Test', 'R14d': 'Test', 'R14e': 'Test',
+    'R15': 'Rx', 'R16a': 'Rx', 'R16b': 'Rx', 'R17': 'Rx', 'R18a': 'Rx', 'R18b': 'Rx',
+    'R19a': 'Rx', 'R19b': 'Rx', 'R19c': 'Rx', 'R19d': 'Rx', 'R19e': 'Rx',
+    'R20a': 'Rx', 'R20b': 'Rx', 'R20c': 'Rx', 'R20d': 'Rx',
+    'R20e': 'Rx', 'R20f': 'Rx', 'R20g': 'Rx', 'R20h': 'Rx', 'R20i': 'Rx', 'R20j': 'Rx',
+    'R21a': 'Test', 'R21b': 'Test', 'R21c': 'NoRx', 'R21d': 'NoRx', 'R21e': 'Test',
+    'R22a': 'Test', 'R22b': 'NoRx', 'R22c': 'NoRx', 'R22d': 'NoRx', 'R22e': 'Test',
+    'R23a': 'Rx', 'R23b': 'Rx'
+};
+
+function calculateThresholdsForRec(rec) {
+    const RV = 1;
+    const H = rec.H_low;
+    const RRbleed = rec.RRbleed || 2.09;
+    const RRrx = rec.RRrx;
+    const Tp = rec.Tp;
+    const RRt = rec.RRt;
+    const isHormonal = rec.group === 'R15-R20';
+
+    if (isHormonal) {
+        const Pt = RV * H / (RRrx - 1);
+        const Ptt = Pt * (RRt * Tp + (1 - Tp));
+        return { Ptt, Pt };
+    } else {
+        const Pt = RV * (RRbleed - 1) * H / (1 - RRrx);
+        const Ptt = ((RRt * Tp + (1 - Tp)) / RRt) * Pt;
+        const Prx = (RRt * Tp + (1 - Tp)) * Pt;
+        return { Ptt, Pt: Prx };
+    }
+}
+
+function determineDecisionForRec(pVTE, thresholds, isHormonal) {
+    const { Ptt, Pt } = thresholds;
+    if (isHormonal) {
+        if (pVTE < Pt) return 'Rx';
+        else if (pVTE > Ptt) return 'NoRx';
+        else return 'Test';
+    } else {
+        if (pVTE < Ptt) return 'NoRx';
+        else if (pVTE > Pt) return 'Rx';
+        else return 'Test';
+    }
+}
+
+function populateVerificationTable() {
+    const tbody = document.getElementById('verify-body');
+    tbody.innerHTML = '';
+
+    let matches = 0;
+    let total = 0;
+
+    RECOMMENDATIONS.forEach(rec => {
+        const excelEUT = EXCEL_AGREEMENT[rec.id];
+        if (!excelEUT) return; // Skip if not in agreement table
+
+        const isHormonal = rec.group === 'R15-R20';
+        const thresholds = calculateThresholdsForRec(rec);
+        const modelEUT = determineDecisionForRec(rec.pVTE, thresholds, isHormonal);
+
+        const isMatch = modelEUT === excelEUT;
+        if (isMatch) matches++;
+        total++;
+
+        const row = document.createElement('tr');
+        row.className = isMatch ? 'match' : 'mismatch';
+        row.innerHTML = `
+            <td><strong>${rec.id}</strong></td>
+            <td>${(rec.pVTE * 100).toFixed(1)}%</td>
+            <td>${(thresholds.Ptt * 100).toFixed(1)}%</td>
+            <td>${(thresholds.Pt * 100).toFixed(1)}%</td>
+            <td>${excelEUT}</td>
+            <td>${modelEUT}</td>
+            <td>${rec.ashDecision}</td>
+            <td>${isMatch ? '✓' : '✗'}</td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    document.getElementById('verify-summary').innerHTML = `
+        <strong>Agreement Rate:</strong> ${matches}/${total} (${((matches/total)*100).toFixed(1)}%)<br>
+        <strong>Matches:</strong> ${matches} | <strong>Mismatches:</strong> ${total - matches}
+    `;
+}
