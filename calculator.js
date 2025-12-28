@@ -269,13 +269,23 @@ function getInputValues() {
 }
 
 function calculateThresholds(params) {
-    const { RV, RRbleed, H, RRrx, Tp, RRt, isHormonal } = params;
+    const { RV, RRbleed, H, H_benefit, RRrx, Tp, RRt, isHormonal } = params;
 
     if (isHormonal) {
-        const Pt = RV * H / (RRrx - 1);
-        const Ptt = Pt * (RRt * Tp + (1 - Tp));
-        return { Ptt, Prx: Pt, Pt };
+        // For COC/HRT: Pt_base = RV × (Hnorx - Hrx) / (RRrx - 1)
+        // where Hnorx = H_benefit (pregnancy risk WITHOUT), Hrx = H (pregnancy risk WITH)
+        // Then: Prx = Pt_base × [(RRt×Tp + 1-Tp) / RRt] - this is the TREATMENT threshold
+        //       Ptt = Pt_base × (RRt×Tp + 1-Tp) - this is the TESTING threshold
+        const Hnorx = H_benefit;  // pregnancy risk WITHOUT treatment
+        const Hrx = H;            // pregnancy risk WITH treatment
+        const Pt_base = RV * (Hnorx - Hrx) / (RRrx - 1);
+        const multiplier = RRt * Tp + (1 - Tp);
+        const Prx = Pt_base * (multiplier / RRt);  // Treatment threshold
+        const Ptt = Pt_base * multiplier;          // Testing threshold
+        // For decision making: Pt = Prx (treatment), Ptt = testing
+        return { Ptt, Prx, Pt: Prx };
     } else {
+        // Standard: Pt = RV × (RRbleed - 1) × H / (1 - RRrx)
         const Pt = RV * (RRbleed - 1) * H / (1 - RRrx);
         const Ptt = ((RRt * Tp + (1 - Tp)) / RRt) * Pt;
         const Prx = (RRt * Tp + (1 - Tp)) * Pt;
@@ -316,13 +326,21 @@ function determineDecision(pVTE, thresholds, isHormonal) {
     const { Ptt, Pt } = thresholds;
 
     if (isHormonal) {
+        // For COC/HRT (inverse logic): Pt < Ptt
+        // - pVTE < Pt → Rx (use COC/HRT, VTE risk low enough)
+        // - Pt ≤ pVTE ≤ Ptt → Test (between thresholds)
+        // - pVTE > Ptt → NoRx (avoid COC/HRT, VTE risk too high)
         if (pVTE < Pt) return 'Rx';
         else if (pVTE > Ptt) return 'NoRx';
-        else return 'Test';
+        else return 'Test';  // Pt ≤ pVTE ≤ Ptt
     } else {
+        // Standard (anticoagulation): Ptt < Pt
+        // - pVTE < Ptt → NoRx (VTE risk too low to treat)
+        // - Ptt ≤ pVTE ≤ Pt → Test (between thresholds)
+        // - pVTE > Pt → Rx (treat all, VTE risk high enough)
         if (pVTE < Ptt) return 'NoRx';
         else if (pVTE > Pt) return 'Rx';
-        else return 'Test';
+        else return 'Test';  // Ptt ≤ pVTE ≤ Pt
     }
 }
 
@@ -878,6 +896,7 @@ const EXCEL_AGREEMENT = {
 function calculateThresholdsForRec(rec) {
     const RV = 1;
     const H = rec.H_low;
+    const H_benefit = rec.H_benefit || H;
     const RRbleed = rec.RRbleed || 2.09;
     const RRrx = rec.RRrx;
     const Tp = rec.Tp;
@@ -885,9 +904,16 @@ function calculateThresholdsForRec(rec) {
     const isHormonal = rec.group === 'R15-R20';
 
     if (isHormonal) {
-        const Pt = RV * H / (RRrx - 1);
-        const Ptt = Pt * (RRt * Tp + (1 - Tp));
-        return { Ptt, Pt };
+        // Pt_base = RV × (Hnorx - Hrx) / (RRrx - 1)
+        // Prx = Pt_base × [(RRt×Tp + 1-Tp) / RRt] - Treatment threshold
+        // Ptt = Pt_base × (RRt×Tp + 1-Tp) - Testing threshold
+        const Hnorx = H_benefit;
+        const Hrx = H;
+        const Pt_base = RV * (Hnorx - Hrx) / (RRrx - 1);
+        const multiplier = RRt * Tp + (1 - Tp);
+        const Prx = Pt_base * (multiplier / RRt);  // Treatment threshold
+        const Ptt = Pt_base * multiplier;          // Testing threshold
+        return { Ptt, Pt: Prx };
     } else {
         const Pt = RV * (RRbleed - 1) * H / (1 - RRrx);
         const Ptt = ((RRt * Tp + (1 - Tp)) / RRt) * Pt;
