@@ -458,6 +458,19 @@ function updateCalculations() {
     document.getElementById('test-threshold').textContent = (thresholds.Ptt * 100).toFixed(displayDecimals) + '%';
     document.getElementById('treat-threshold').textContent = (thresholds.Pt * 100).toFixed(displayDecimals) + '%';
 
+    // Update threshold labels based on recommendation type
+    if (params.isHormonal) {
+        // R15-R20: Treatment threshold < VTE risk < Testing threshold → Test
+        document.getElementById('label-test').textContent = 'Test if between';
+        document.getElementById('sublabel-test').textContent = 'treatment threshold and this value';
+        document.getElementById('label-treat').textContent = 'Use COC/HRT if below';
+    } else {
+        // Standard: Testing threshold < VTE risk < Treatment threshold → Test
+        document.getElementById('label-test').textContent = 'Test if between';
+        document.getElementById('sublabel-test').textContent = 'this value and treatment threshold';
+        document.getElementById('label-treat').textContent = 'Treat all if above';
+    }
+
     // Update outcomes table - always use 1 decimal place
     document.getElementById('vte-norx').textContent = outcomes.NoRx.vte.toFixed(1);
     document.getElementById('harm-norx').textContent = outcomes.NoRx.harm.toFixed(1);

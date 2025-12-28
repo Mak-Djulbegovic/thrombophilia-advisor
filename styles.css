@@ -586,6 +586,14 @@ body {
     color: var(--primary);
 }
 
+.th-sublabel {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--gray-500);
+    margin-top: 2px;
+    font-style: italic;
+}
+
 /* Outcomes Table */
 .outcomes-table {
     width: 100%;

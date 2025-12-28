@@ -4,8 +4,8 @@
 This is a web-based clinical decision support tool for thrombophilia testing based on the ASH 2023 Guidelines. It implements Expected Utility Theory (EUT) to calculate testing and treatment thresholds.
 
 ## Architecture
-- **index.html** - Main HTML structure with search UI, results display, and About overlay
-- **calculator.js** - Core application logic (search, calculations, chart rendering)
+- **index.html** - Main HTML structure with search UI, results display, About overlay, and Verification overlay
+- **calculator.js** - Core application logic (search, calculations, chart rendering, verification table)
 - **data.js** - All recommendation definitions with parameters (64 total after R14f-h removal)
 - **styles.css** - Complete styling
 
@@ -15,50 +15,97 @@ This is a web-based clinical decision support tool for thrombophilia testing bas
 ```
 Pt = RV × (RRbleed - 1) × H / (1 - RRrx)
 Ptt = [(RRt × Tp + (1 - Tp)) / RRt] × Pt
+Prx = (RRt × Tp + (1 - Tp)) × Pt
 ```
+For display: Treatment threshold = Prx, Testing threshold = Ptt
+
 Decision logic:
 - pVTE < Ptt → NoRx (Don't treat)
-- pVTE > Pt → Rx (Treat all)
-- Between → Test
+- Ptt ≤ pVTE ≤ Prx → Test (between thresholds)
+- pVTE > Prx → Rx (Treat all)
 
 ### Hormonal Recommendations (R15-R20): VTE vs COC/HRT Benefits - INVERSE LOGIC
 ```
-Pt = RV × H / (RRrx - 1)
-Ptt = Pt × (RRt × Tp + (1 - Tp))
+Pt_base = RV × (Hnorx - Hrx) / (RRrx - 1)
+       = RV × (H_benefit - H_low) / (RRrx - 1)
+
+Prx = Pt_base × [(RRt × Tp + (1 - Tp)) / RRt]  → Treatment threshold
+Ptt = Pt_base × (RRt × Tp + (1 - Tp))          → Testing threshold
 ```
 Where:
-- H_low = side effect cost of using COC/HRT (for threshold calculations)
-- H_benefit = cost of NOT using COC/HRT (unwanted pregnancies/symptoms, for outcome calculations)
+- H_low (Hrx) = pregnancy/symptom rate WITH treatment (e.g., 5.95% for COC)
+- H_benefit (Hnorx) = pregnancy/symptom rate WITHOUT treatment (e.g., 85% for COC)
 
-Decision logic (REVERSED):
-- pVTE < Pt → Rx (Use COC/HRT - risk is acceptably low)
-- pVTE > Ptt → NoRx (Avoid COC/HRT - risk too high)
-- Between → Test
+Decision logic (REVERSED - treatment threshold < testing threshold):
+- pVTE < Prx → Rx (Use COC/HRT - VTE risk acceptably low)
+- Prx ≤ pVTE ≤ Ptt → Test (between thresholds)
+- pVTE > Ptt → NoRx (Avoid COC/HRT - VTE risk too high)
+
+### Example: R15 Threshold Calculation
+```
+Hnorx = 0.85, Hrx = 0.0595, RRrx = 3.5, RRt = 5.89, Tp = 0.0685
+
+Pt_base = (0.85 - 0.0595) / (3.5 - 1) = 0.7905 / 2.5 = 31.6%
+multiplier = 5.89 × 0.0685 + 0.9315 = 1.335
+
+Prx = 31.6% × (1.335 / 5.89) = 31.6% × 0.227 = 7.17%  ← Treatment threshold
+Ptt = 31.6% × 1.335 = 42.2%                           ← Testing threshold
+```
 
 ## Key Decision Rules
 
 ### For Standard Recommendations (R1-R14, R21-R23):
-- **No testing/no treatment**: VTE risk < Testing threshold
-- **Thrombophilia testing**: Testing threshold < VTE risk < Treatment threshold
-- **Treatment with anticoagulants**: VTE risk > Treatment threshold
+- **No testing/no treatment**: VTE risk < Testing threshold (Ptt)
+- **Thrombophilia testing**: Testing threshold ≤ VTE risk ≤ Treatment threshold
+- **Treatment with anticoagulants**: VTE risk > Treatment threshold (Prx)
 
 ### For Hormonal Recommendations (R15-R20) - REVERSE LOGIC:
-- **Treatment (contraceptives/HRT)**: VTE risk < Treatment threshold → Use COC/HRT
-- **Thrombophilia testing**: Treatment threshold < VTE risk < Testing threshold → Test first
-- **No testing/no treatment**: VTE risk > Testing threshold → Avoid COC/HRT
+- **Treatment (COC/HRT)**: VTE risk < Treatment threshold (Prx) → Use COC/HRT
+- **Thrombophilia testing**: Treatment threshold ≤ VTE risk ≤ Testing threshold
+- **No testing/no treatment**: VTE risk > Testing threshold (Ptt) → Avoid COC/HRT
+
+## UI Features
+
+### Decision Threshold Display
+The three-panel threshold display dynamically updates labels based on recommendation type:
+- **Standard**: "Test if between [Ptt] and treatment threshold"
+- **Hormonal**: "Test if between treatment threshold and [Ptt]"
+
+### Model Verification Table
+Accessible via "Model Verification" link in footer. Shows:
+- All recommendations with pVTE, Ptt, Pt values
+- Excel expected EUT decision vs Model calculated decision
+- Agreement rate summary
 
 ## Changes Completed (December 2024)
 
+### Threshold Formula Fixes (R15-R20)
+- Corrected formula to use (Hnorx - Hrx) instead of just H_low
+- Now correctly calculates Prx (treatment) and Ptt (testing) thresholds
+- R15 thresholds now match Excel: Prx=7.17%, Ptt=42.2%
+
+### Outcome Calculation Fixes (R15-R20)
+- Rx now correctly shows pregnancy rate WITH treatment (H_low), not 0
+- Test now includes pregnancy costs for both positives (H_benefit) and negatives (H_low)
+- NoRx correctly shows H_benefit (85% pregnancy rate without COC)
+
+### Display Improvements
+- Dynamic decimal places based on recommendation's decimals setting
+- R15-R20 now show 4 decimal places (e.g., 0.0350% instead of 0.0%)
+- Threshold labels update dynamically based on recommendation type
+
+### Verification System
+- Added Model Verification overlay accessible from footer
+- Compares model decisions against Excel Agreement tab
+- Shows match/mismatch status with color coding
+
 ### About Section Updates
-- Added key decision rules explaining threshold logic for standard and inverse (R15-R20) scenarios
-- Added statement about quality/certainty of evidence (CoE):
-  - Very low CoE for all recommendations except R15 and R16
-  - Low CoE for R15 and R16
-  - Conditional recommendations for all except R15 (strong recommendation)
+- Added key decision rules explaining threshold logic for standard and inverse scenarios
+- Added statement about quality/certainty of evidence (CoE)
 
 ### Chart Enhancements
 - Added numeric values above bar chart bars using ChartDataLabels plugin
-- EUT graph already has vertical threshold lines (Test and Treatment thresholds)
+- EUT graph shows vertical threshold lines with Ptt and Pt labels and values
 
 ### ASH Recommendation Display
 - Added full ASH recommendation text below the model vs guideline comparison
@@ -73,39 +120,20 @@ Decision logic (REVERSED):
 
 #### R15-R20 (Women Considering COC/HRT)
 - Added H_benefit field for pregnancy/symptom cost calculations
-- Updated H_low values to match Excel "Rx" column (side effect costs):
-  - COC scenarios (R15, R17, R19a-e): H_low = 0.0595, H_benefit = 0.85
-  - HRT estrogen (R16a, R18a, R20a/c/e/g/i): H_low = 0.1077, H_benefit = 0.3659
-  - HRT combined (R16b, R18b, R20b/d/f/h/j): H_low = 0.1559, H_benefit = 0.3167
-- Set RRbleed to null for hormonal scenarios (not applicable)
+- H_low = pregnancy rate ON treatment, H_benefit = pregnancy rate WITHOUT treatment
+- COC scenarios: H_low = 0.0595, H_benefit = 0.85
+- HRT estrogen: H_low = 0.1077, H_benefit = 0.3659
+- HRT combined: H_low = 0.1559, H_benefit = 0.3167
 
-#### R21a-R21e (Antepartum Prophylaxis)
-- R21a: pVTE=0.0375, Tp=0.25, RRt=20.96, RRrx=0.41, H=0.00634, RRbleed=3.21
-- R21b: pVTE=0.018, Tp=0.5, RRt=10.51, RRrx=0.41 (Antithrombin def, not FVL+PGM)
-- R21c: pVTE=0.004, Tp=0.5, RRt=6.04, RRrx=0.41 (Protein C def)
-- R21d: pVTE=0.008, Tp=0.5, RRt=5.03, RRrx=0.41 (Protein S def)
-- R21e: pVTE=0.02025, Tp=0.25, RRt=9.36, RRrx=0.41 (FVL+PGM compound)
-
-#### R22a-R22e (Postpartum Prophylaxis)
-- R22a: pVTE=0.0375, Tp=0.25, RRt=20.96, RRrx=0.41, H=0.00846, RRbleed=3.38
-- R22b: pVTE=0.018, Tp=0.5, RRt=10.51 (Antithrombin def)
-- R22c: pVTE=0.004, Tp=0.5, RRt=6.04 (Protein C def)
-- R22d: pVTE=0.008, Tp=0.5, RRt=5.03 (Protein S def)
-- R22e: pVTE=0.02025, Tp=0.25, RRt=9.36 (FVL+PGM compound)
-
-#### R23a and R23b (CANCER, not Pregnancy)
-- Changed from pregnancy scenarios to AMBULATORY PATIENTS WITH CANCER
-- R23a: pVTE=0.05, Tp=0.142, RRt=3.28, RRrx=0.61, H=0.0036, RRbleed=1.65 (Low VTE risk)
-- R23b: pVTE=0.066, Tp=0.142, RRt=3.28, RRrx=0.61, H=0.008, RRbleed=1.65 (Intermediate VTE risk)
-
-### Dropdown Updates
-- Removed R14f, R14g, R14h from dropdown
-- Fixed R21-R22 labels to match actual thrombophilia types
-- Added separate "Ambulatory Patients with Cancer (R23)" optgroup
+#### R21-R23
+- Fixed all parameter values to match Excel
+- R23a/R23b changed from pregnancy to AMBULATORY PATIENTS WITH CANCER
 
 ## Source Data
 Excel file: `files/4.ASH-Threshold-thrombophilia-calculator-Final-withArg_pVTE-.xlsx`
 Key sheets: R1-R10, R11-R14,R21-R23, R15-R20, Agreement
+
+Formula documentation: `error_documentation/Thrombophilia-calculator-2024-supp.docx`
 
 ## Recommendation Groups
 - R1-R10: Patients with symptomatic VTE
@@ -116,9 +144,10 @@ Key sheets: R1-R10, R11-R14,R21-R23, R15-R20, Agreement
 
 ## Testing Checklist
 After making changes, verify:
-1. Each recommendation displays correct thresholds
-2. Decision logic matches expected outcomes
-3. EUT graph shows correct curves and threshold lines
+1. Each recommendation displays correct thresholds matching Excel
+2. Decision logic: Testing occurs ONLY when pVTE is between the two thresholds
+3. EUT graph shows correct curves and threshold lines with values
 4. Bar chart values match table values with numbers displayed above bars
-5. ASH recommendation text is displayed for each scenario
-6. Model decisions align with Excel Agreement tab for baseline parameters
+5. Outcome calculations correct (especially Rx pregnancies for R15-R20)
+6. ASH recommendation text is displayed for each scenario
+7. Model decisions align with Excel Agreement tab (check via Verification overlay)

@@ -1,0 +1,10 @@
+Key Decision Rules for Standard Recommendations (R1-R14, R21-R23)
+No testing/no treatment: VTE risk < Testing threshold
+Thrombophilia testing: Testing threshold < VTE risk < Treatment threshold
+Treatment with anticoagulants: VTE risk > Treatment threshold
+Key Decision Rules for R15-R20 (Inverse Logic)
+For recommendations R15-R20 (women considering COC/HRT), the logic is reversed because hormonal treatment increases VTE risk rather than reducing it:
+
+Treatment (COC/HRT): VTE risk < Treatment threshold — the best strategy is to not test and administer treatment
+Thrombophilia testing: Treatment threshold < VTE risk < Testing threshold — the best strategy is to test and treat if the test is negative
+No testing/no treatment: VTE risk > Testing threshold — the best strategy is to not test and avoid treatment
