@@ -248,6 +248,12 @@ function getInputValues() {
 
     const isHormonal = currentRecommendation.group === 'R15-R20';
 
+    // For hormonal scenarios (R15-R20):
+    // - H_low = side effect cost of using COC/HRT (for threshold calculations)
+    // - H_benefit = cost of NOT using COC/HRT (unwanted pregnancies, for outcome calculations)
+    const H = bleedingRisk === 'low' ? currentRecommendation.H_low :
+           (currentRecommendation.H_high || currentRecommendation.H_low);
+
     return {
         pVTE: parseFloat(document.getElementById('param-pvte').value) / 100,
         RV: parseFloat(document.getElementById('param-rv').value),
@@ -256,8 +262,8 @@ function getInputValues() {
         RRt: currentRecommendation.RRt,
         RRrx: currentRecommendation.RRrx,
         RRbleed: currentRecommendation.RRbleed,
-        H: bleedingRisk === 'low' ? currentRecommendation.H_low :
-           (currentRecommendation.H_high || currentRecommendation.H_low),
+        H: H,
+        H_benefit: currentRecommendation.H_benefit || H,
         isHormonal: isHormonal
     };
 }
@@ -278,7 +284,7 @@ function calculateThresholds(params) {
 }
 
 function calculateOutcomes(params, N = 1000) {
-    const { pVTE, Tp, RRt, RRrx, H, RRbleed, isHormonal } = params;
+    const { pVTE, Tp, RRt, RRrx, H, H_benefit, RRbleed, isHormonal } = params;
 
     const N_pos = Tp * N;
     const N_neg = (1 - Tp) * N;
@@ -286,13 +292,15 @@ function calculateOutcomes(params, N = 1000) {
     const pVTE_pos = pVTE_neg * RRt;
 
     if (isHormonal) {
-        // For hormonal: "harm" = unwanted pregnancies (inverse logic)
+        // For hormonal: "harm" = unwanted pregnancies/symptoms (inverse logic)
+        // Use H_benefit (cost of NOT using treatment) for outcome calculations
         // NoRx (Avoid COC): baseline VTE, but ALL have unwanted pregnancy risk
         // Rx (Use COC): increased VTE, but NO unwanted pregnancies (protected)
         // Test: positives avoid (have pregnancy risk), negatives use (protected)
+        const pregnancyCost = H_benefit;
         return {
-            NoRx: { vte: pVTE * N, harm: H * N },
-            Test: { vte: pVTE_pos * N_pos + pVTE_neg * RRrx * N_neg, harm: H * N_pos },
+            NoRx: { vte: pVTE * N, harm: pregnancyCost * N },
+            Test: { vte: pVTE_pos * N_pos + pVTE_neg * RRrx * N_neg, harm: pregnancyCost * N_pos },
             Rx: { vte: pVTE * RRrx * N, harm: 0 }
         };
     } else {
@@ -412,6 +420,9 @@ function updateCalculations() {
     document.getElementById('model-decision').textContent = formatDecision(modelDecision, params.isHormonal).split(' ')[0];
     document.getElementById('ash-decision').textContent = formatDecision(ashDecision, params.isHormonal).split(' ')[0];
 
+    // Update full ASH recommendation text
+    document.getElementById('ash-rec-text').textContent = currentRecommendation.ashRec;
+
     const indicator = document.getElementById('agreement-indicator');
     const icon = indicator.querySelector('.agree-icon');
     if (agreement) {
@@ -466,6 +477,11 @@ function updateOutcomesChart(outcomes, isHormonal, modelDecision) {
     const vteColors = labels.map((_, i) => i === highlightIndex ? 'rgba(37, 99, 235, 1)' : 'rgba(37, 99, 235, 0.5)');
     const harmColors = labels.map((_, i) => i === highlightIndex ? 'rgba(220, 38, 38, 1)' : 'rgba(220, 38, 38, 0.5)');
 
+    // Determine decimal places based on data magnitude
+    const allValues = [outcomes.NoRx.vte, outcomes.Test.vte, outcomes.Rx.vte, outcomes.NoRx.harm, outcomes.Test.harm, outcomes.Rx.harm];
+    const maxVal = Math.max(...allValues);
+    const decimals = maxVal < 1 ? 2 : (maxVal < 10 ? 1 : 0);
+
     outcomesChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -496,6 +512,18 @@ function updateOutcomesChart(outcomes, isHormonal, modelDecision) {
                 },
                 title: {
                     display: false
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#333',
+                    font: {
+                        size: 10,
+                        weight: 'bold'
+                    },
+                    formatter: function(value) {
+                        return value.toFixed(decimals);
+                    }
                 }
             },
             scales: {
@@ -507,7 +535,8 @@ function updateOutcomesChart(outcomes, isHormonal, modelDecision) {
                     }
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels]
     });
 }
 
@@ -516,7 +545,7 @@ function updateEUTChart(params, thresholds) {
 
     if (eutChart) eutChart.destroy();
 
-    const { RV, Tp, RRt, RRrx, H, RRbleed, isHormonal, pVTE } = params;
+    const { RV, Tp, RRt, RRrx, H, H_benefit, RRbleed, isHormonal, pVTE } = params;
 
     const pVTERange = [];
     const maxP = Math.max(0.05, pVTE * 2, thresholds.Ptt * 1.5);
@@ -530,15 +559,17 @@ function updateEUTChart(params, thresholds) {
         if (isHormonal) {
             // Weighted average (VTE + pregnancy): positive values, INVERSE logic
             // Lower = better outcome
-            // NoRx = avoid COC: baseline VTE + cost of foregone benefit (H)
-            euNoRx.push(p * RV + H);
-            // Rx = use COC: increased VTE risk, but get the benefit (no H penalty)
+            // Use H_benefit (cost of not using treatment) for outcome display
+            const pregnancyCost = H_benefit;
+            // NoRx = avoid COC: baseline VTE + cost of foregone benefit (pregnancyCost)
+            euNoRx.push(p * RV + pregnancyCost);
+            // Rx = use COC: increased VTE risk, but get the benefit (no pregnancy cost)
             euRx.push(p * RRrx * RV);
             const p_neg = p / (RRt * Tp + (1 - Tp));
             const p_pos = p_neg * RRt;
-            // Test: positives avoid COC (baseline VTE + H), negatives use COC (increased VTE, no H)
+            // Test: positives avoid COC (baseline VTE + cost), negatives use COC (increased VTE, no cost)
             const testVTE = p_pos * Tp + p_neg * RRrx * (1 - Tp);
-            euTest.push(testVTE * RV + H * Tp);
+            euTest.push(testVTE * RV + pregnancyCost * Tp);
         } else {
             // Weighted average (VTE + major bleeding): positive values
             euNoRx.push(p + RV * H);

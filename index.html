@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thrombophilia Testing Advisor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -67,12 +68,9 @@
                             <option value="R13">R13: Family VTE, unknown thrombophilia</option>
                             <option value="R14a">R14a: Family FVL, no VTE</option>
                             <option value="R14b">R14b: Family PGM, no VTE</option>
-                            <option value="R14c">R14c: Family Protein C, no VTE (1st degree)</option>
-                            <option value="R14d">R14d: Family Protein S, no VTE (1st degree)</option>
-                            <option value="R14e">R14e: Family Antithrombin, no VTE (1st degree)</option>
-                            <option value="R14f">R14f: Family Protein C, no VTE (2nd degree)</option>
-                            <option value="R14g">R14g: Family Protein S, no VTE (2nd degree)</option>
-                            <option value="R14h">R14h: Family Antithrombin, no VTE (2nd degree)</option>
+                            <option value="R14c">R14c: Family Protein C, no VTE</option>
+                            <option value="R14d">R14d: Family Protein S, no VTE</option>
+                            <option value="R14e">R14e: Family Antithrombin, no VTE</option>
                         </optgroup>
                         <optgroup label="Women Considering COC/HRT (R15-R20) - INVERSE MODEL">
                             <option value="R15">R15: General population - COC</option>
@@ -97,19 +95,21 @@
                             <option value="R20i">R20i: Known Antithrombin - HRT estrogen</option>
                             <option value="R20j">R20j: Known Antithrombin - HRT combined</option>
                         </optgroup>
-                        <optgroup label="Women Planning Pregnancy (R21-R23)">
+                        <optgroup label="Women Planning Pregnancy (R21-R22)">
                             <option value="R21a">R21a: Homozygous FVL - antepartum</option>
-                            <option value="R21b">R21b: FVL+PGM compound - antepartum</option>
-                            <option value="R21c">R21c: Antithrombin def - antepartum</option>
-                            <option value="R21d">R21d: Protein C def - antepartum</option>
-                            <option value="R21e">R21e: Protein S def - antepartum</option>
+                            <option value="R21b">R21b: Antithrombin def - antepartum</option>
+                            <option value="R21c">R21c: Protein C def - antepartum</option>
+                            <option value="R21d">R21d: Protein S def - antepartum</option>
+                            <option value="R21e">R21e: FVL+PGM compound - antepartum</option>
                             <option value="R22a">R22a: Homozygous FVL - postpartum</option>
-                            <option value="R22b">R22b: FVL+PGM compound - postpartum</option>
-                            <option value="R22c">R22c: Antithrombin def - postpartum</option>
-                            <option value="R22d">R22d: Protein C def - postpartum</option>
-                            <option value="R22e">R22e: Protein S def - postpartum</option>
-                            <option value="R23a">R23a: Unknown thrombophilia - antepartum</option>
-                            <option value="R23b">R23b: Unknown thrombophilia - postpartum</option>
+                            <option value="R22b">R22b: Antithrombin def - postpartum</option>
+                            <option value="R22c">R22c: Protein C def - postpartum</option>
+                            <option value="R22d">R22d: Protein S def - postpartum</option>
+                            <option value="R22e">R22e: FVL+PGM compound - postpartum</option>
+                        </optgroup>
+                        <optgroup label="Ambulatory Patients with Cancer (R23)">
+                            <option value="R23a">R23a: Cancer - low VTE risk</option>
+                            <option value="R23b">R23b: Cancer - intermediate VTE risk</option>
                         </optgroup>
                     </select>
                 </div>
@@ -171,6 +171,11 @@
                             <span class="comp-label">ASH Guideline</span>
                             <span class="comp-value" id="ash-decision">Test</span>
                         </div>
+                    </div>
+
+                    <div class="ash-recommendation-full">
+                        <h4>Full ASH Recommendation</h4>
+                        <p id="ash-rec-text">ASH recommendation text will appear here...</p>
                     </div>
                 </div>
 
@@ -320,13 +325,28 @@
                     </div>
                 </div>
 
+                <h4>Key Decision Rules for Standard Recommendations (R1-R14, R21-R23)</h4>
+                <ul>
+                    <li><strong>No testing/no treatment:</strong> VTE risk &lt; Testing threshold</li>
+                    <li><strong>Thrombophilia testing:</strong> Testing threshold &lt; VTE risk &lt; Treatment threshold</li>
+                    <li><strong>Treatment with anticoagulants:</strong> VTE risk &gt; Treatment threshold</li>
+                </ul>
+
+                <h4>Key Decision Rules for R15-R20 (Inverse Logic)</h4>
+                <p>For recommendations R15-R20 (women considering COC/HRT), the logic is <em>reversed</em> because hormonal treatment increases VTE risk rather than reducing it:</p>
+                <ul>
+                    <li><strong>Treatment (COC/HRT):</strong> VTE risk &lt; Treatment threshold — the best strategy is to not test and administer treatment</li>
+                    <li><strong>Thrombophilia testing:</strong> Treatment threshold &lt; VTE risk &lt; Testing threshold — the best strategy is to test and treat if the test is negative</li>
+                    <li><strong>No testing/no treatment:</strong> VTE risk &gt; Testing threshold — the best strategy is to not test and avoid treatment</li>
+                </ul>
+
                 <p>The thresholds are calculated using Expected Utility Theory (EUT), weighing:</p>
                 <ul>
                     <li><strong>Probability of VTE</strong> without treatment</li>
-                    <li><strong>Relative risk reduction</strong> from anticoagulation</li>
-                    <li><strong>Bleeding risk</strong> from treatment</li>
+                    <li><strong>Relative risk reduction</strong> from anticoagulation (or increase from hormones)</li>
+                    <li><strong>Bleeding risk</strong> from treatment (or pregnancy/symptom costs)</li>
                     <li><strong>Test characteristics</strong> (prevalence, relative risk in positives)</li>
-                    <li><strong>Patient preferences</strong> (relative value of avoiding VTE vs. bleeding)</li>
+                    <li><strong>Patient preferences</strong> (relative value of avoiding VTE vs. harms)</li>
                 </ul>
             </section>
 
@@ -356,6 +376,12 @@
                 </div>
                 <p>Where RV = relative value of outcomes, H = baseline bleeding risk, RR = relative risks.</p>
                 <p>The testing threshold (P<sub>tt</sub>) accounts for test characteristics to identify the range where testing provides value.</p>
+            </section>
+
+            <section class="about-section">
+                <h3>Quality of Evidence</h3>
+                <p>Quality (certainty) of evidence (CoE) is judged by the ASH thrombophilia panel as <strong>very low</strong> for all recommendations except for R15 and R16, which the panel judged as <strong>low</strong> CoE.</p>
+                <p>For all scenarios considered, the panel made <strong>conditional recommendations</strong> except for R15, which <strong>strongly recommended</strong> not testing for thrombophilia to guide COC use in women from the general population.</p>
             </section>
 
             <section class="about-section">

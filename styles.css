@@ -434,6 +434,29 @@ body {
     font-size: 1.5rem;
 }
 
+/* ASH Full Recommendation */
+.ash-recommendation-full {
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--success-light) 0%, #ecfdf5 100%);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--success);
+}
+
+.ash-recommendation-full h4 {
+    font-size: 0.85rem;
+    color: var(--success);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ash-recommendation-full p {
+    font-size: 0.95rem;
+    color: var(--gray-700);
+    line-height: 1.6;
+}
+
 /* ============================================
    DETAILS SECTION (Expandable)
    ============================================ */
