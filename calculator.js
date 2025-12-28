@@ -454,20 +454,24 @@ function updateCalculations() {
     // Update thresholds display - use more decimals for small values
     const decimals = currentRecommendation.decimals || 2;
     const displayDecimals = Math.max(1, decimals);
-    document.getElementById('current-risk').textContent = (params.pVTE * 100).toFixed(displayDecimals) + '%';
-    document.getElementById('test-threshold').textContent = (thresholds.Ptt * 100).toFixed(displayDecimals) + '%';
-    document.getElementById('treat-threshold').textContent = (thresholds.Pt * 100).toFixed(displayDecimals) + '%';
+    const pttDisplay = (thresholds.Ptt * 100).toFixed(displayDecimals) + '%';
+    const ptDisplay = (thresholds.Pt * 100).toFixed(displayDecimals) + '%';
 
-    // Update threshold labels based on recommendation type
+    document.getElementById('current-risk').textContent = (params.pVTE * 100).toFixed(displayDecimals) + '%';
+    document.getElementById('treat-threshold').textContent = ptDisplay;
+
+    // Update testing zone and labels based on recommendation type
     if (params.isHormonal) {
         // R15-R20: Treatment threshold < VTE risk < Testing threshold → Test
-        document.getElementById('label-test').textContent = 'Test if between';
-        document.getElementById('sublabel-test').textContent = 'treatment threshold and this value';
+        // Testing zone: Pt (lower) to Ptt (upper)
+        document.getElementById('test-zone').textContent = ptDisplay + ' – ' + pttDisplay;
+        document.getElementById('sublabel-test').textContent = 'Test only if VTE risk is in this range';
         document.getElementById('label-treat').textContent = 'Use COC/HRT if below';
     } else {
         // Standard: Testing threshold < VTE risk < Treatment threshold → Test
-        document.getElementById('label-test').textContent = 'Test if between';
-        document.getElementById('sublabel-test').textContent = 'this value and treatment threshold';
+        // Testing zone: Ptt (lower) to Pt (upper)
+        document.getElementById('test-zone').textContent = pttDisplay + ' – ' + ptDisplay;
+        document.getElementById('sublabel-test').textContent = 'Test only if VTE risk is in this range';
         document.getElementById('label-treat').textContent = 'Treat all if above';
     }
 

@@ -594,6 +594,18 @@ body {
     font-style: italic;
 }
 
+.threshold-item.testing-zone {
+    background: rgba(217, 119, 6, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    border: 1px dashed var(--warning);
+}
+
+.th-zone {
+    color: var(--warning);
+    font-size: 1.1rem;
+}
+
 /* Outcomes Table */
 .outcomes-table {
     width: 100%;
