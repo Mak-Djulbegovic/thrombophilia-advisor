@@ -1,4 +1,4 @@
-# ASH Thrombophilia Testing Advisor - Development Guide
+# ASH Thrombophilia Calculator - Development Guide
 
 ## Overview
 This is a web-based clinical decision support tool for thrombophilia testing based on the ASH 2023 Guidelines. It implements Expected Utility Theory (EUT) to calculate testing and treatment thresholds.
