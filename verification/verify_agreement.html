@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Model Verification - Agreement Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background: #f0f0f0; }
+        .agree { background: #d4edda; }
+        .disagree { background: #f8d7da; }
+        h1 { color: #333; }
+        .summary { margin: 20px 0; padding: 15px; background: #e9ecef; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Model vs Excel Agreement Verification</h1>
+    <div class="summary" id="summary"></div>
+    <table id="results">
+        <thead>
+            <tr>
+                <th>Case</th>
+                <th>pVTE</th>
+                <th>Excel EUT</th>
+                <th>Model EUT</th>
+                <th>ASH</th>
+                <th>Model Matches Excel?</th>
+            </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+    </table>
+
+    <script src="../data.js"></script>
+    <script>
+        // Expected EUT decisions from Excel Agreement tab
+        const excelAgreement = {
+            'R1': 'Rx', 'R2': 'NoRx', 'R3': 'Rx', 'R4': 'Rx', 'R5': 'Rx', 'R6': 'Rx',
+            'R7': 'Rx', 'R8': 'Rx', 'R9': 'Rx', 'R10': 'Rx',
+            'R11a': 'Test', 'R11b': 'Test', 'R11c': 'Test', 'R11d': 'Rx', 'R11e': 'Rx',
+            'R12a': 'Test', 'R12b': 'Test', 'R12c': 'Test', 'R12d': 'Rx', 'R12e': 'Rx',
+            'R13': 'Test',
+            'R14a': 'Test', 'R14b': 'Test', 'R14c': 'Test', 'R14d': 'Test', 'R14e': 'Test',
+            'R15': 'Rx', 'R16a': 'Rx', 'R16b': 'Rx', 'R17': 'Rx', 'R18a': 'Rx', 'R18b': 'Rx',
+            'R19a': 'Rx', 'R19b': 'Rx', 'R19c': 'Rx', 'R19d': 'Rx', 'R19e': 'Rx',
+            'R20a': 'Rx', 'R20b': 'Rx', 'R20c': 'Rx', 'R20d': 'Rx',
+            'R20e': 'Rx', 'R20f': 'Rx', 'R20g': 'Rx', 'R20h': 'Rx', 'R20i': 'Rx', 'R20j': 'Rx',
+            'R21a': 'Test', 'R21b': 'Test', 'R21c': 'NoRx', 'R21d': 'NoRx', 'R21e': 'Test',
+            'R22a': 'Test', 'R22b': 'NoRx', 'R22c': 'NoRx', 'R22d': 'NoRx', 'R22e': 'Test',
+            'R23a': 'Rx', 'R23b': 'Rx'
+        };
+
+        // Calculate thresholds
+        function calculateThresholds(rec) {
+            const RV = 1;
+            const H = rec.H_low;
+            const RRbleed = rec.RRbleed || 2.09;
+            const RRrx = rec.RRrx;
+            const Tp = rec.Tp;
+            const RRt = rec.RRt;
+            const isHormonal = rec.isReversed;
+
+            if (isHormonal) {
+                const Pt = RV * H / (RRrx - 1);
+                const Ptt = Pt * (RRt * Tp + (1 - Tp));
+                return { Ptt, Pt };
+            } else {
+                const Pt = RV * (RRbleed - 1) * H / (1 - RRrx);
+                const Ptt = ((RRt * Tp + (1 - Tp)) / RRt) * Pt;
+                return { Ptt, Pt };
+            }
+        }
+
+        // Determine decision
+        function determineDecision(pVTE, thresholds, isHormonal) {
+            const { Ptt, Pt } = thresholds;
+            if (isHormonal) {
+                if (pVTE < Pt) return 'Rx';
+                if (pVTE > Ptt) return 'NoRx';
+                return 'Test';
+            } else {
+                if (pVTE < Ptt) return 'NoRx';
+                if (pVTE > Pt) return 'Rx';
+                return 'Test';
+            }
+        }
+
+        // Run verification
+        const tbody = document.getElementById('results-body');
+        let matches = 0;
+        let total = 0;
+
+        recommendations.forEach(rec => {
+            const excelEUT = excelAgreement[rec.id];
+            if (!excelEUT) return;
+
+            const thresholds = calculateThresholds(rec);
+            const modelEUT = determineDecision(rec.pVTE, thresholds, rec.isReversed);
+
+            const isMatch = modelEUT === excelEUT;
+            if (isMatch) matches++;
+            total++;
+
+            const row = document.createElement('tr');
+            row.className = isMatch ? 'agree' : 'disagree';
+            row.innerHTML = `
+                <td><strong>${rec.id}</strong></td>
+                <td>${(rec.pVTE * 100).toFixed(2)}%</td>
+                <td>${excelEUT}</td>
+                <td>${modelEUT}</td>
+                <td>${rec.ashDecision}</td>
+                <td>${isMatch ? 'YES' : 'NO'}</td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        document.getElementById('summary').innerHTML = `
+            <strong>Agreement Rate:</strong> ${matches}/${total} (${((matches/total)*100).toFixed(1)}%)<br>
+            <strong>Matches:</strong> ${matches} | <strong>Mismatches:</strong> ${total - matches}
+        `;
+    </script>
+</body>
+</html>

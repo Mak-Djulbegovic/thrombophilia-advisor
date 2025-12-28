@@ -435,18 +435,17 @@ function updateCalculations() {
 
     // Update thresholds display
     const decimals = Math.max(2, currentRecommendation.decimals || 2);
-    document.getElementById('current-risk').textContent = (params.pVTE * 100).toFixed(decimals) + '%';
-    document.getElementById('test-threshold').textContent = (thresholds.Ptt * 100).toFixed(decimals) + '%';
-    document.getElementById('treat-threshold').textContent = (thresholds.Pt * 100).toFixed(decimals) + '%';
+    document.getElementById('current-risk').textContent = (params.pVTE * 100).toFixed(1) + '%';
+    document.getElementById('test-threshold').textContent = (thresholds.Ptt * 100).toFixed(1) + '%';
+    document.getElementById('treat-threshold').textContent = (thresholds.Pt * 100).toFixed(1) + '%';
 
-    // Update outcomes table
-    const dec = currentRecommendation.decimals || 1;
-    document.getElementById('vte-norx').textContent = outcomes.NoRx.vte.toFixed(dec);
-    document.getElementById('harm-norx').textContent = outcomes.NoRx.harm.toFixed(dec);
-    document.getElementById('vte-test').textContent = outcomes.Test.vte.toFixed(dec);
-    document.getElementById('harm-test').textContent = outcomes.Test.harm.toFixed(dec);
-    document.getElementById('vte-rx').textContent = outcomes.Rx.vte.toFixed(dec);
-    document.getElementById('harm-rx').textContent = outcomes.Rx.harm.toFixed(dec);
+    // Update outcomes table - always use 1 decimal place
+    document.getElementById('vte-norx').textContent = outcomes.NoRx.vte.toFixed(1);
+    document.getElementById('harm-norx').textContent = outcomes.NoRx.harm.toFixed(1);
+    document.getElementById('vte-test').textContent = outcomes.Test.vte.toFixed(1);
+    document.getElementById('harm-test').textContent = outcomes.Test.harm.toFixed(1);
+    document.getElementById('vte-rx').textContent = outcomes.Rx.vte.toFixed(1);
+    document.getElementById('harm-rx').textContent = outcomes.Rx.harm.toFixed(1);
 
     // Highlight optimal row
     document.getElementById('row-norx').classList.remove('highlight-row');
@@ -477,10 +476,8 @@ function updateOutcomesChart(outcomes, isHormonal, modelDecision) {
     const vteColors = labels.map((_, i) => i === highlightIndex ? 'rgba(37, 99, 235, 1)' : 'rgba(37, 99, 235, 0.5)');
     const harmColors = labels.map((_, i) => i === highlightIndex ? 'rgba(220, 38, 38, 1)' : 'rgba(220, 38, 38, 0.5)');
 
-    // Determine decimal places based on data magnitude
-    const allValues = [outcomes.NoRx.vte, outcomes.Test.vte, outcomes.Rx.vte, outcomes.NoRx.harm, outcomes.Test.harm, outcomes.Rx.harm];
-    const maxVal = Math.max(...allValues);
-    const decimals = maxVal < 1 ? 2 : (maxVal < 10 ? 1 : 0);
+    // Always use 1 decimal place for consistency
+    const decimals = 1;
 
     outcomesChart = new Chart(ctx, {
         type: 'bar',
@@ -586,10 +583,15 @@ function updateEUTChart(params, thresholds) {
         ? ['Avoid COC/HRT', 'Test First', 'Use COC/HRT']
         : ['No Treatment', 'Test & Treat', 'Treat All'];
 
+    // Store threshold values for use in plugin
+    const thresholdPtt = thresholds.Ptt * 100;
+    const thresholdPt = thresholds.Pt * 100;
+    const currentPVTE = pVTE * 100;
+
     eutChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: pVTERange.map(p => (p * 100).toFixed(4)),
+            labels: pVTERange.map(p => (p * 100).toFixed(1)),
             datasets: [
                 { label: labels[0], data: euNoRx, borderColor: 'rgba(5, 150, 105, 1)', borderWidth: 2, fill: false, pointRadius: 0 },
                 { label: labels[1], data: euTest, borderColor: 'rgba(217, 119, 6, 1)', borderWidth: 2, fill: false, pointRadius: 0 },
@@ -602,7 +604,14 @@ function updateEUTChart(params, thresholds) {
             interaction: { intersect: false, mode: 'index' },
             plugins: { legend: { position: 'top' } },
             scales: {
-                x: { title: { display: true, text: 'Probability of VTE Recurrence (%)' }, ticks: { callback: function(v, i) { return i % 20 === 0 ? this.getLabelForValue(v) : ''; } } },
+                x: {
+                    title: { display: true, text: 'Probability of VTE (%)' },
+                    ticks: {
+                        callback: function(v, i) {
+                            return i % 20 === 0 ? this.getLabelForValue(v) : '';
+                        }
+                    }
+                },
                 y: { beginAtZero: true, title: { display: true, text: isHormonal ? 'Weighted Average (VTE+pregnancy)' : 'Weighted Average (VTE+major bleeding)' } }
             }
         },
@@ -611,28 +620,55 @@ function updateEUTChart(params, thresholds) {
                 const ctx = chart.ctx;
                 const xAxis = chart.scales.x;
                 const yAxis = chart.scales.y;
+                const maxX = parseFloat(pVTERange[pVTERange.length - 1] * 100);
 
-                // Draw threshold lines
-                [
-                    { value: thresholds.Ptt * 100, color: 'rgba(37, 99, 235, 0.8)', label: 'Test' },
-                    { value: thresholds.Pt * 100, color: 'rgba(220, 38, 38, 0.8)', label: 'Treat' }
-                ].forEach(line => {
-                    const x = xAxis.getPixelForValue(line.value.toFixed(4));
+                // Helper function to get pixel position for a percentage value
+                function getXPixel(pctValue) {
+                    const dataIndex = (pctValue / maxX) * (pVTERange.length - 1);
+                    return xAxis.getPixelForValue(dataIndex);
+                }
+
+                // Draw threshold lines with labels
+                const thresholdLines = [
+                    { value: thresholdPtt, color: 'rgba(37, 99, 235, 0.9)', label: isHormonal ? 'Test Threshold' : 'Test Threshold', labelShort: 'Ptt' },
+                    { value: thresholdPt, color: 'rgba(220, 38, 38, 0.9)', label: isHormonal ? 'Treat Threshold' : 'Treat Threshold', labelShort: 'Pt' }
+                ];
+
+                thresholdLines.forEach((line, idx) => {
+                    const x = getXPixel(line.value);
                     if (x >= xAxis.left && x <= xAxis.right) {
                         ctx.save();
+                        // Draw dashed line
                         ctx.beginPath();
                         ctx.strokeStyle = line.color;
                         ctx.lineWidth = 2;
-                        ctx.setLineDash([5, 5]);
+                        ctx.setLineDash([6, 4]);
                         ctx.moveTo(x, yAxis.top);
                         ctx.lineTo(x, yAxis.bottom);
                         ctx.stroke();
+
+                        // Draw label with value at top
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = line.color;
+                        ctx.font = 'bold 11px Arial';
+                        ctx.textAlign = 'center';
+                        const labelText = line.labelShort + '=' + line.value.toFixed(1) + '%';
+                        const yPos = yAxis.top + 15 + (idx * 18);
+
+                        // Draw background for label
+                        const textWidth = ctx.measureText(labelText).width;
+                        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                        ctx.fillRect(x - textWidth/2 - 3, yPos - 12, textWidth + 6, 16);
+
+                        // Draw label text
+                        ctx.fillStyle = line.color;
+                        ctx.fillText(labelText, x, yPos);
                         ctx.restore();
                     }
                 });
 
                 // Draw current pVTE line
-                const currentX = xAxis.getPixelForValue((pVTE * 100).toFixed(4));
+                const currentX = getXPixel(currentPVTE);
                 if (currentX >= xAxis.left && currentX <= xAxis.right) {
                     ctx.save();
                     ctx.beginPath();
@@ -641,6 +677,21 @@ function updateEUTChart(params, thresholds) {
                     ctx.moveTo(currentX, yAxis.top);
                     ctx.lineTo(currentX, yAxis.bottom);
                     ctx.stroke();
+
+                    // Label for current pVTE
+                    ctx.fillStyle = 'rgba(139, 92, 246, 1)';
+                    ctx.font = 'bold 11px Arial';
+                    ctx.textAlign = 'center';
+                    const pVTELabel = 'pVTE=' + currentPVTE.toFixed(1) + '%';
+                    const textWidth = ctx.measureText(pVTELabel).width;
+
+                    // Background
+                    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                    ctx.fillRect(currentX - textWidth/2 - 3, yAxis.bottom - 25, textWidth + 6, 16);
+
+                    // Text
+                    ctx.fillStyle = 'rgba(139, 92, 246, 1)';
+                    ctx.fillText(pVTELabel, currentX, yAxis.bottom - 12);
                     ctx.restore();
                 }
             }
