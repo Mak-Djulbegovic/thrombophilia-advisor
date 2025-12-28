@@ -292,16 +292,16 @@ function calculateOutcomes(params, N = 1000) {
     const pVTE_pos = pVTE_neg * RRt;
 
     if (isHormonal) {
-        // For hormonal: "harm" = unwanted pregnancies/symptoms (inverse logic)
-        // Use H_benefit (cost of NOT using treatment) for outcome calculations
-        // NoRx (Avoid COC): baseline VTE, but ALL have unwanted pregnancy risk
-        // Rx (Use COC): increased VTE, but NO unwanted pregnancies (protected)
-        // Test: positives avoid (have pregnancy risk), negatives use (protected)
-        const pregnancyCost = H_benefit;
+        // For hormonal: "harm" = unwanted pregnancies/symptoms
+        // H_benefit = pregnancy rate WITHOUT treatment (e.g., 85% for COC)
+        // H (which is H_low) = pregnancy rate WITH treatment (e.g., 5.95% for COC)
+        // NoRx (Avoid COC): baseline VTE + high pregnancy risk (H_benefit)
+        // Rx (Use COC): increased VTE + low pregnancy risk (H_low)
+        // Test: positives avoid COC (H_benefit), negatives use COC (H_low)
         return {
-            NoRx: { vte: pVTE * N, harm: pregnancyCost * N },
-            Test: { vte: pVTE_pos * N_pos + pVTE_neg * RRrx * N_neg, harm: pregnancyCost * N_pos },
-            Rx: { vte: pVTE * RRrx * N, harm: 0 }
+            NoRx: { vte: pVTE * N, harm: H_benefit * N },
+            Test: { vte: pVTE_pos * N_pos + pVTE_neg * RRrx * N_neg, harm: H_benefit * N_pos + H * N_neg },
+            Rx: { vte: pVTE * RRrx * N, harm: H * N }
         };
     } else {
         return {
@@ -433,11 +433,12 @@ function updateCalculations() {
         icon.textContent = '≠';
     }
 
-    // Update thresholds display
-    const decimals = Math.max(2, currentRecommendation.decimals || 2);
-    document.getElementById('current-risk').textContent = (params.pVTE * 100).toFixed(1) + '%';
-    document.getElementById('test-threshold').textContent = (thresholds.Ptt * 100).toFixed(1) + '%';
-    document.getElementById('treat-threshold').textContent = (thresholds.Pt * 100).toFixed(1) + '%';
+    // Update thresholds display - use more decimals for small values
+    const decimals = currentRecommendation.decimals || 2;
+    const displayDecimals = Math.max(1, decimals);
+    document.getElementById('current-risk').textContent = (params.pVTE * 100).toFixed(displayDecimals) + '%';
+    document.getElementById('test-threshold').textContent = (thresholds.Ptt * 100).toFixed(displayDecimals) + '%';
+    document.getElementById('treat-threshold').textContent = (thresholds.Pt * 100).toFixed(displayDecimals) + '%';
 
     // Update outcomes table - always use 1 decimal place
     document.getElementById('vte-norx').textContent = outcomes.NoRx.vte.toFixed(1);
@@ -556,17 +557,17 @@ function updateEUTChart(params, thresholds) {
         if (isHormonal) {
             // Weighted average (VTE + pregnancy): positive values, INVERSE logic
             // Lower = better outcome
-            // Use H_benefit (cost of not using treatment) for outcome display
-            const pregnancyCost = H_benefit;
-            // NoRx = avoid COC: baseline VTE + cost of foregone benefit (pregnancyCost)
-            euNoRx.push(p * RV + pregnancyCost);
-            // Rx = use COC: increased VTE risk, but get the benefit (no pregnancy cost)
-            euRx.push(p * RRrx * RV);
+            // H_benefit = pregnancy rate without COC (high, e.g., 85%)
+            // H = pregnancy rate with COC (low, e.g., 5.95%)
+            // NoRx = avoid COC: baseline VTE + high pregnancy cost (H_benefit)
+            euNoRx.push(p * RV + H_benefit);
+            // Rx = use COC: increased VTE risk + low pregnancy cost (H)
+            euRx.push(p * RRrx * RV + H);
             const p_neg = p / (RRt * Tp + (1 - Tp));
             const p_pos = p_neg * RRt;
-            // Test: positives avoid COC (baseline VTE + cost), negatives use COC (increased VTE, no cost)
+            // Test: positives avoid COC (baseline VTE + H_benefit), negatives use COC (increased VTE + H)
             const testVTE = p_pos * Tp + p_neg * RRrx * (1 - Tp);
-            euTest.push(testVTE * RV + pregnancyCost * Tp);
+            euTest.push(testVTE * RV + H_benefit * Tp + H * (1 - Tp));
         } else {
             // Weighted average (VTE + major bleeding): positive values
             euNoRx.push(p + RV * H);
@@ -859,7 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Expected EUT decisions from Excel Agreement tab
 const EXCEL_AGREEMENT = {
-    'R1': 'Rx', 'R2': 'NoRx', 'R3': 'Rx', 'R4': 'Rx', 'R5': 'Rx', 'R6': 'Rx',
+    'R1': 'Rx', 'R2': 'Rx', 'R3': 'Rx', 'R4': 'Rx', 'R5': 'Rx', 'R6': 'Rx',
     'R7': 'Rx', 'R8': 'Rx', 'R9': 'Rx', 'R10': 'Rx',
     'R11a': 'Test', 'R11b': 'Test', 'R11c': 'Test', 'R11d': 'Rx', 'R11e': 'Rx',
     'R12a': 'Test', 'R12b': 'Test', 'R12c': 'Test', 'R12d': 'Rx', 'R12e': 'Rx',
@@ -927,13 +928,16 @@ function populateVerificationTable() {
         if (isMatch) matches++;
         total++;
 
+        // Use appropriate decimals for display
+        const displayDecimals = Math.max(1, rec.decimals || 2);
+
         const row = document.createElement('tr');
         row.className = isMatch ? 'match' : 'mismatch';
         row.innerHTML = `
             <td><strong>${rec.id}</strong></td>
-            <td>${(rec.pVTE * 100).toFixed(1)}%</td>
-            <td>${(thresholds.Ptt * 100).toFixed(1)}%</td>
-            <td>${(thresholds.Pt * 100).toFixed(1)}%</td>
+            <td>${(rec.pVTE * 100).toFixed(displayDecimals)}%</td>
+            <td>${(thresholds.Ptt * 100).toFixed(displayDecimals)}%</td>
+            <td>${(thresholds.Pt * 100).toFixed(displayDecimals)}%</td>
             <td>${excelEUT}</td>
             <td>${modelEUT}</td>
             <td>${rec.ashDecision}</td>

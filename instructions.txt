@@ -1,0 +1,27 @@
+We have thoroughly tested the app your generated. Some parts work nice, but some contains errors. I hope you can fix the errors while not affecting the parts that work correctly.
+First, in the section “About This Tool” can you insert the key decision rules
+ 
+No testing/no treatment should be recommended for VTE risk < Testing threshold
+Thrombophilia testing should only be done for testing threshold < VTE risk < Testing Threshold.
+Treatment with anticoagulants should be recommended for VTE risk > testing threshold.
+Except for Recommendation, R15-R20, where reverse logic applies:
+Treatment (contraceptives/HRT): If the VTE risk is below the treatment threshold, the best strategy is to not to test and to administer “treatment” (contraceptives/HRT).                                                                                                                                             
+Thrombophilia testing : If the VTE risk is between the testing threshold and the treatment threshold , the best strategy  is to test and treat if the test is not positive.                                                                                                                                                                                                      
+No testing/no treatment: If the VTE risk is above the testing threshold, the best strategy is to not to test and not to treat.           
+Also, in the same section state:
+“Quality (certainty) of evidence (CoE) is judged by the ASH thrombophilia panel as very low for all recommendations except for R15 and R16, which the panel judged as low CoE. For all scenarios considered the panel made conditional recommendations except for R15, which strongly recommended it.”
+EUT graphs:      
+Currently, only vertical VTE risk is shown. No (vertical) lines for testing and treatment thresholds were displayed.       A fundamental idea here is to show the VTE risk line in a relation to the testing and treatment threshold (as per above decision rules). This enables a reader to visually grasp the optimal management strategy.
+ 
+Bar graphs: can you include number (in small fonts) above each graph?
+ 
+The EXCEL calculator also includes ASH thrombophilia recommendations in full. Please include the text for each recommendations (probably best included below where you showed if recommendations by the model is equal or different from ASH guidelines recommendations.        
+ 
+R14 – most numbers and calculations are wrong. Also, there are no recommendations R14 to R14g. Please fix these errors.
+Similarly, R21a to R21e and R22a to R22 bmostly include the wrong numbers and calculations. Please fix this as well.
+ 
+R23 a and R23 b refers to wrong scenario (pregnancy) instead of cancer. Pleas fix it .
+ 
+R15  to R20        most numbers and calculations are wrong- this also needs corrections. [Don’t forget to apply the decision rules to these recommendations as per above. Also, remember to retain the current title of Y axis]
+Finally, can you compare your recommendations against the recommendations made by the model shown in the EXCEL tab “Agreement”. As this App only used EUT model, please ignore the acceptable regret model.
+ 
